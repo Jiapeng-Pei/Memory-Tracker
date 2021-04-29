@@ -151,14 +151,32 @@ We figured out two approaches. They can be each other complements.
      ![pjpimage](pjpimage.jpg)
 
 ### Task3: Check whether there is a memory leak in a process.
-  
+
 - #### **Pin** 
    There're mainly two approaches.
      1. ##### End of process check. 
-     Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
+       Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
       
      2. ##### Run-time check.
-     We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
+       We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
+- #### By overriding memory management functions
+
+  - When the system call `malloc`, we will malloc bigger space than requested
+
+  - In this extra part, we can use a struct `malloc_info` to store the information of this memory e.g which line of code call malloc.
+
+  - ```c++
+    struct malloc_info{
+        malloc_info* pre;
+        malloc_info* next;
+        int line;
+    }
+    ```
+
+  - We will maintain a `list` of `malloc_info` , when system call `malloc`, we can add `malloc_info` into the `list`, when the system call `free`, we can remove it from the `list`  (new and delete are the same )
+
+  -  At the end of the code, we will check whether this `list` is empty or not. If it is empty, there is no memory leak. If it not empty, we can find which line of this . 
+
 ## Expected Goals
 
 1. **Keep real-time statistics on the system process and its thread memory usage**.
