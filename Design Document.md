@@ -75,7 +75,14 @@ use `/proc` file to check the memory use of process and thread and we can use ` 
 
 ##### 5. Show the information in realtime
 
-​    repeat step 1 - step 4, every 5 million seconds then show the statistic result, in this way, it can achieve realtime statistic.
+​    repeat step 1 - step 4, every 5 milliseconds then show the statistic result, in this way, it can achieve realtime statistic.
+
+
+
+#### Probable merits and innovations:
+
+- Comprehensive and detailed information of processes including stack size and data segment size e.t.c
+- Multiple threads' information.
 
 
 
@@ -93,7 +100,7 @@ We figured out two approaches. They can be each other complements.
 
   2. **Import the real function call**
 
-     For instance, using the system *malloc* call to allocate the space. Use the following lines to retrieve the according system functions. The function *dlsym* takes a "handle" of a dynamic library and the null-terminated symbol name, returning the address where that symbol is loaded into memory.
+     For instance, using the system *malloc* call to allocate the space. Use the following lines to retrieve the according system functions. The function *dlsym* takes a "handle" of a dynamic library and the null-terminated symbol name, returning the address where that symbol is loaded into memory. 
 
      ```C++
      real_malloc = dlsym(RTLD_NEXT, "malloc");
@@ -103,6 +110,8 @@ We figured out two approaches. They can be each other complements.
      real_calloc = dlsym(RTLD_NEXT, "calloc");
      
      real_free = dlsym(RTLD_NEXT, "free");
+     
+     /* And also some file handle related functions, omitted here. */
      
      ```
 
@@ -120,6 +129,7 @@ We figured out two approaches. They can be each other complements.
      static void *tmp_calloc(size_t n, size_t size);
      static bool tmp_free(void *p);
      static void *tmp_realloc(void *oldp, size_t size);
+     /* And also some file handle related functions, omitted here. */
      ```
 
   5. **Use LD_PRELOAD**
@@ -142,23 +152,34 @@ We figured out two approaches. They can be each other complements.
 
   2. ##### Detect heap memory allocation and release in a process.
 
-     ​	By using pin and its corresponding API, we are able to insert code segments in every places in the executable. Thus, it's possible to detect memory allocation instructions including `malloc()`, `free()`, `new()` , `delete()` in the executable. Once detecting these instructions, we save these instructions into a .log file. In this way, we are able to detect memory allocation and release in a process. 
+     ​	By using pin and its corresponding API, we are able to insert code segments in every places in the executable. Thus, it's possible to detect memory allocation instructions including `malloc()`, `free()`, `new()` , `delete()` and **file handle** related instrcutions in the executable. Once detecting these instructions, we save these instructions into a .log file. In this way, we are able to detect memory allocation and release in a process. 
+
+     ![pjpimage](pjpimage.jpg)
 
   3. ##### Monitor the allocation and release of the file handle in a specific process.
 
      ​	Similar to above section, we are able to detect memory reference trace information of a certain process.  We are able to see a process's current opened files, file's status(Read or Write) and other information. 
+  
+     
 
-     ![pjpimage](pjpimage.jpg)
+#### Probable merits and innovations:
+
+- Comprehensive information of a certain process is output to a log in real time.
+- A reasonable and appropriate way to display these information will be provided to user, probably neat data or a chart.
+
+
 
 ### Task3: Check whether there is a memory leak in a process.
 
 - #### **Pin** 
-   There're mainly two approaches.
+   There're mainly two features.
      1. ##### End of process check. 
-       Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
-      
-     2. ##### Run-time check.
-       We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
+   
+   - Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
+   
+     2. ##### Run-time check.(Maybe too difficult.Optional.)
+   
+   - We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
 - #### By overriding memory management functions
 
   - When the system call `malloc`, we will malloc bigger space than requested
@@ -166,16 +187,32 @@ We figured out two approaches. They can be each other complements.
   - In this extra part, we can use a struct `malloc_info` to store the information of this memory e.g which line of code call malloc.
 
   - ```c++
+    /* This is just a raw example to illustrate the idea */
     struct malloc_info{
         malloc_info* pre;
         malloc_info* next;
         int line;
     }
-    ```
+```
+    
+- We will maintain a `list` of `malloc_info` , when system call `malloc`, we can add `malloc_info` into the `list`, when the system call `free`, we can remove it from the `list`  (new and delete are the same )
+  
+  -  At the end of the code, we will check whether this `list` is empty or not. If it is empty, there is no memory leak. If it is not empty, we can find the line of `malloc` which missed the necessary `free`. 
+  
+  
 
-  - We will maintain a `list` of `malloc_info` , when system call `malloc`, we can add `malloc_info` into the `list`, when the system call `free`, we can remove it from the `list`  (new and delete are the same )
+#### Probable merits and innovations:
 
-  -  At the end of the code, we will check whether this `list` is empty or not. If it is empty, there is no memory leak. If it not empty, we can find which line of this . 
+- The memory leak will be located as precise as possible.
+
+- If we have sufficient time, we would like to accomplish some of the followings:
+
+  - Real time memory leak detection.
+  - Detection of dangling pointers which are probably caused by the mis-behaved memory free operations. 
+
+  
+
+
 
 ## Expected Goals
 
@@ -197,4 +234,8 @@ We figured out two approaches. They can be each other complements.
 
 ## Division of Labor
 
-​	The three expected goals will be solved serially. For each goal, we will generally follow the implementation route. If faced with obstacles, we'd like to attempt other approaches. To illustrate, ...
+​	The three expected goals will be solved serially. For each goal, we will generally follow the implementation route. If faced with obstacles, we'd like to attempt other approaches and figure out the solution together.
+
+- Task1: We three together solve this.
+- Task2: 张沐阳 use method 1 first. 陈浩, 裴嘉鹏 use method 2. A final method will be chosen together and may be a mixed one of the two.
+- Task3: We three together solve this.
