@@ -192,8 +192,8 @@ We figured out two approaches. They can be each other complements.
         malloc_info* pre;
         malloc_info* next;
         int line;
-    }
-```
+    }```
+
     
 - We will maintain a `list` of `malloc_info` , when system call `malloc`, we can add `malloc_info` into the `list`, when the system call `free`, we can remove it from the `list`  (new and delete are the same )
   
