@@ -49,19 +49,19 @@ use `/proc` file to check the memory use of process and thread and we can use ` 
 
 ​	use `std::filesystem` to check folders whose file name is a number in `/proc` , these files' name are all                 processes of the system
 
-​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/allpid.PNG" style="zoom:30%;" />
+​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/allpid.PNG" width="800" />
 
 ##### 2. Get memory usage of a certain process
 
 ​	read `/proc/pid/status` file to check information of memory usage
 
-​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/pmemusage.PNG" style="zoom: 33%;"/>
+​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/pmemusage.PNG" width="250"/>
 
 ##### 3. Get threads of a process
 
 ​	check folders in `/proc/pid/task` , folders are corresponding threads of the  process
 
-​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/tid.PNG" style="zoom: 50%;" />
+​	<img src="https://github.com/Jiapeng-Pei/Memory-Tracker/blob/main/tid.PNG" width="200" />
 
 ##### 4. Get memory usage of a thread
 
