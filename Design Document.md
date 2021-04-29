@@ -1,6 +1,8 @@
-# Design Document
+# Design Document of Process Memory Tracker
 
 Group member: 张沐阳， 陈浩， 裴嘉鹏
+
+
 
 ## Project Background and Description
 
@@ -47,8 +49,21 @@ Group member: 张沐阳， 陈浩， 裴嘉鹏
 
 ## Expected Goals
 
+1. **Keep real-time statistics on the system process and its thread memory usage**.
 
+   - Coding should be used to realize the statistics of memory usage information, and the memory statistics data are sorted and displayed in real time.
 
+2. **Detection of the memory allocation and release in a process.**
 
+   - Coding is employed to detect memory allocation and release in a specific process.
+   - Coding is employed to monitor the allocation and release of the file handle in a specific process.
+
+3. **Check whether there is a memory leak in a process.**
+
+   - Record the process memory allocation and release, and confirm whether there is a leakage; If there is, point out the suspicious code.
+
+   
 
 ## Division of Labor
+
+​	The three expected goals will be solved serially. For each goal, we will generally follow the implementation route. If faced with obstacles, we'd like to attempt other approaches. To illustrate, ...
