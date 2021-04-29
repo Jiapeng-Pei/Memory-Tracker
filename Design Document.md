@@ -150,16 +150,15 @@ We figured out two approaches. They can be each other complements.
 
      ![pjpimage](pjpimage.jpg)
 
-  4. ##### Check whether there's a memory leak in a process.
-      There're mainly two approaches.
-      -  End of process check. 
-
-      Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
-    
-    
-      -  Run-time check.
+### Task3: Check whether there is a memory leak in a process.
   
-      We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
+- #### **Pin** 
+   There're mainly two approaches.
+     1. ##### End of process check. 
+     Firstly, keep the record of a process's memory allocation and release instructions during executing. Secondly, instrument codes using pin at the end of the executable. These codes will be utilized for checking memory leak. Thirdly, before the exit of current process, we check whether there exists un-freed block memory, which indicates a memory leak. Finally, we retrieve the suspicious instructions from the instruction record we have kept, and output these instructions. 
+      
+     2. ##### Run-time check.
+     We will calculate the number of memory allocation instructions and free instructions. If the number of memory allocation instructions continue to grow in a rapid speed and overwhelms that of memory release instructions, memory leak may happen. We can monitor this situation and output suspicious instructions.
 ## Expected Goals
 
 1. **Keep real-time statistics on the system process and its thread memory usage**.
@@ -176,6 +175,7 @@ We figured out two approaches. They can be each other complements.
    - Record the process memory allocation and release, and confirm whether there is a leakage; If there is, point out the suspicious code.
 
    
+
 
 ## Division of Labor
 
