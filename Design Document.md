@@ -41,9 +41,35 @@ Group member: 张沐阳， 陈浩， 裴嘉鹏
 
 ## Implementation
 
+#### Real time statistics system process and thread memory usage：
 
+use `/proc` file to check the memory use of process and thread and we can use ` std::ifstream` in c++ to read this file
 
+##### 1. Get all processes' pid
 
+​	use `std::filesystem` to check folders whose file name is a number in `/proc` , these files' name are all                 processes of the system
+
+​	<img src="allpid.png" style="zoom:30%;" />
+
+##### 2. Get memory usage of a certain process
+
+​	read `/proc/pid/status` file to check information of memory usage
+
+​	<img src="pmemusage.png" style="zoom: 33%;" />
+
+##### 3. Get threads of a process
+
+​	check folders in `/proc/pid/task` , folders are corresponding threads of the  process
+
+​	<img src="tid.png" style="zoom: 50%;" />
+
+##### 4. Get memory usage of a thread
+
+​	read `proc/pid/task/tid/status` file to check the memory usage of a thread
+
+##### 5. Show the information in realtime
+
+​    repeat step 1 - step 4, every 5 million seconds then show the statistic result, in this way, it can achieve realtime statistic.
 
 
 
