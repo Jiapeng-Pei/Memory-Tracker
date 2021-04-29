@@ -41,7 +41,13 @@ Group member: 张沐阳， 陈浩， 裴嘉鹏
 
 ## Implementation
 
-#### Real time statistics system process and thread memory usage：
+### General Technical Route
+
+![image-20210429163302711](techroute.png)
+
+
+
+### Task1: Real time statistics system process and thread memory usage：
 
 use `/proc` file to check the memory use of process and thread and we can use ` std::ifstream` in c++ to read this file
 
@@ -72,6 +78,83 @@ use `/proc` file to check the memory use of process and thread and we can use ` 
 ​    repeat step 1 - step 4, every 5 million seconds then show the statistic result, in this way, it can achieve realtime statistic.
 
 
+
+### Task2: Detection of the memory allocation and release in a process：
+
+We figured out two approaches. They can be each other complements.
+
+- #### Override memory management functions such as *malloc* without changing the original code
+
+  In the code ( written in cpp ) of our tool:
+
+  1. **Override *malloc*, *calloc*, e.t.c.**
+
+     Besides allocating some space, the overidden functions also output the memory information to a log for storage. Information like allocated size and the pointer should be stored. *new* operator also invokes *malloc*.
+
+  2. **Import the real function call**
+
+     For instance, using the system *malloc* call to allocate the space. Use the following lines to retrieve the according system functions. The function *dlsym* takes a "handle" of a dynamic library and the null-terminated symbol name, returning the address where that symbol is loaded into memory.
+
+     ```C++
+     real_malloc = dlsym(RTLD_NEXT, "malloc");
+     
+     real_realloc = dlsym(RTLD_NEXT, "realloc");
+     	
+     real_calloc = dlsym(RTLD_NEXT, "calloc");
+     
+     real_free = dlsym(RTLD_NEXT, "free");
+     
+     ```
+
+  3. **Initialize overriden functions in __ attribute __ ((constructor))**
+
+     *__ attribute __ ((constructor))* runs when a shared library is loaded, typically during program startup.
+
+  4. **Provide temporary and simple memory allocation buffer**
+
+     Segmentation fault can happen sometimes, which is due to the fact that *dlsym* may invoke the allocation functions, causing a recursion to the end of the stack. The solution is to provide a simple static allocator that takes care of allocations before *dlsym* returns the *malloc* function pointer.
+
+     ```C++
+     /* for example */
+     static void * tmp_malloc(size_t size);
+     static void *tmp_calloc(size_t n, size_t size);
+     static bool tmp_free(void *p);
+     static void *tmp_realloc(void *oldp, size_t size);
+     ```
+
+  5. **Use LD_PRELOAD**
+
+     Build our library as a shared object. Set to the path of a shared object, that file will be loaded before any other library (including the C runtime).
+
+     ```shell
+     $ LD_PRELOAD=/path/to/my/library.so ./code
+     ```
+
+     
+
+- #### **Pin** 
+
+  1. ##### A just-in-time code injection tool.
+
+     ​	Pin is a tool for the instrumentation of programs. Pin allows a tool to insert arbitrary code (written in C or C++) in arbitrary places in the executable. The code is added dynamically while the executable is running. This also makes it possible to attach Pin to an already running process.
+
+     ​	Pin provides a rich API that abstracts away the underlying instruction set idiosyncracies and allows context information to be passed to the injected code as parameters.
+
+  2. ##### Detect heap memory allocation and release in a process.
+
+     ​	By using pin and its corresponding API, we are able to insert code segments in every places in the executable. Thus, it's possible to detect memory allocation instructions including `malloc()`, `free()`, `new()` , `delete()` in the executable. Once detecting these instructions, we save these instructions into a .log file. In this way, we are able to detect memory allocation and release in a process. 
+
+  3. ##### Monitor the allocation and release of the file handle in a specific process.
+
+     ​	Similar to above section, we are able to detect memory reference trace information of a certain process.  We are able to see a process's current opened files, file's status(Read or Write) and other information. 
+
+     ![pjpimage](pjpimage.jpg)
+
+  4. ##### Check whether there's a memory leak in a process.
+
+     ​	First, keep the record of a process's memory allocation and release instructions. Following scenes may indicate that there exits a memory leak. 
+
+     4. 1 An allocation instruction is 
 
 ## Expected Goals
 
