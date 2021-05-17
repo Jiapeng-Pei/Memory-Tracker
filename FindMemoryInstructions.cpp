@@ -13,22 +13,47 @@
 
 #include <stdio.h>
 #include <string>
+#include <iostream>
 #include <inttypes.h>
+#include <fstream>
 #include "pin.H"
 
-int numRtnsParsed = 0;
+using namespace::std;
 
-VOID Arg1Before(CHAR * name, ADDRINT size)
+/* ===================================================================== */
+/* Global Variables */
+/* ===================================================================== */
+
+int mallocCount = 0;
+int freeCount = 0;
+std::ofstream TraceFile;
+
+/* ===================================================================== */
+/* Commandline Switches */
+/* ===================================================================== */
+
+KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
+    "o", "codyPei.out", "specify trace file name");
+
+/* ===================================================================== */
+/* Analysis routines                                                     */
+/* ===================================================================== */
+ 
+
+VOID FuncBefore(const CHAR * name, ADDRINT size)
 {
-    // TraceFile << name << "(" << size << ")" << endl;
-    printf("%s(0x%" PRIx64 ")\n", name, size);
+    TraceFile << name << "(" << size << ")" << endl;
 }
 
 VOID MallocAfter(ADDRINT ret)
 {
-    // TraceFile << "  returns " << ret << endl;
-    printf("returns 0x%" PRIx64 "\n", ret);
+    TraceFile << "  returns " << ret << endl;
 }
+
+
+/* ===================================================================== */
+/* Instrumentation routines                                              */
+/* ===================================================================== */
 
 static VOID Trace(TRACE trace, VOID *v)
 {
@@ -47,15 +72,14 @@ static VOID Trace(TRACE trace, VOID *v)
            A tool may wish to parse each such RTN only once, if so it will need to record and identify which RTNs 
            have already been parsed
         */
-    
-        numRtnsParsed++;
       
         auto* malloc_ptr = strstr(RTN_Name(rtn).c_str(), "malloc");
         auto* free_ptr = strstr(RTN_Name(rtn).c_str(), "free");
         if (malloc_ptr != nullptr) {
             // Find malloc.
-            printf ("\n%s(0x%x)\n", RTN_Name(rtn).c_str(), IARG_FUNCARG_ENTRYPOINT_VALUE);
-            printf ("  return(0x%x)\n", IARG_FUNCRET_EXITPOINT_VALUE);
+            mallocCount++;
+            FuncBefore(RTN_Name(rtn).c_str(), IARG_FUNCARG_ENTRYPOINT_VALUE);
+            MallocAfter(IARG_FUNCRET_EXITPOINT_VALUE);
             // RTN_Open(rtn);
 
             // // Instrument malloc() to print the input argument value and the return value.
@@ -71,7 +95,8 @@ static VOID Trace(TRACE trace, VOID *v)
 
         if (free_ptr != nullptr) {
             // Find free.
-            printf ("\n%s(0x%x)\n", RTN_Name(rtn).c_str(), IARG_FUNCARG_ENTRYPOINT_VALUE);
+            freeCount++;
+            FuncBefore(RTN_Name(rtn).c_str(), IARG_FUNCARG_ENTRYPOINT_VALUE);
             // RTN_Open(rtn);
             // // Instrument free() to print the input argument value.
             // RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)Arg1Before,
@@ -96,18 +121,30 @@ static VOID Trace(TRACE trace, VOID *v)
 
 }
 
+/* ===================================================================== */
+
 VOID Fini (INT32 code, VOID *v)
 {
-    ASSERTX(numRtnsParsed != 0);
+    ASSERTX( mallocCount + freeCount != 0);
+    TraceFile.close();
 }
+
+/* ===================================================================== */
+/* Main                                                                  */
+/* ===================================================================== */
 
 int main(int argc, char * argv[])
 {
     PIN_InitSymbols();
     PIN_Init(argc, argv);
 
+    TraceFile.open(KnobOutputFile.Value().c_str());
+    TraceFile << hex;
+    TraceFile.setf(ios::showbase);
+
     TRACE_AddInstrumentFunction(Trace, 0);
     PIN_AddFiniFunction(Fini, 0);
+
     // Start the program, never returns
     PIN_StartProgram();
     
