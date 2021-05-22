@@ -99,14 +99,6 @@ FILE *fopen(const char *pathname, const char *mode) {
         real_fopen = dlsym(RTLD_NEXT, "fopen");
     }
     FILE * res = real_fopen(pathname, mode);
-    struct file_node * tmp =(struct file_node*)malloc(sizeof(
-                                            struct file_node));
-    tmp -> prev = NULL;
-    tmp -> next = NULL;
-    tmp -> pathname = pathname;
-    tmp -> file_ptr = res;
-    Insert_File_Node(tmp);
-
     return res;
 }
 
@@ -116,68 +108,32 @@ int fclose(FILE *file) {
         real_fclose = dlsym(RTLD_NEXT, "fclose");
     }
 
-    struct file_node * remove_file = Find_File_node(file);
-    if(remove_file != NULL){
-        Remove_File_Node(remove_file);
+
+    int MAXSIZE = 0xFFF;
+    char proclnk[0xFFF];
+    char filename[0xFFF];
+    int fno;
+    ssize_t r;
+    int res;
+
+    if (file != NULL)
+    {
+        fno = fileno(file);
+        sprintf(proclnk, "/proc/self/fd/%d", fno);
+        r = readlink(proclnk, filename, MAXSIZE);
+        if (r < 0)
+        {
+            printf("failed to readlink\n");
+            exit(1);
+        }
+        filename[r] = '\0';
+        
+        char buffer[100];
+       (void) sprintf(buffer, "filename is %s\n", filename);
+       (void) write(1, buffer, strlen(buffer));
+        res = real_fclose(file);
     }
-    int res = real_fclose(file);
+    
     
     return res;
 }
-
-
-void Insert_File_Node(struct file_node* cur) {
-    cur -> prev = NULL;
-    if (head == NULL) {
-        cur -> next = NULL;
-    }
-    else {
-        cur->next = head;
-        head->prev = cur;
-    }
-    head = cur;
-    file_total_pointer += 1;
-    
-}
-
-void Remove_File_Node(struct file_node* cur ) {
-    if (cur->next != NULL) {
-        cur->next->prev = cur->prev;
-    }
-    if (cur->prev != NULL) {
-        cur->prev->next = cur->next;
-    }
-    if (head == cur) {
-        head = head->next;
-    }
-    cur->next = NULL;
-    cur->prev = NULL;
-
-    file_total_pointer -= 1;
-
-    char buffer[100];
-    (void) sprintf(buffer, "File %s close!\n", cur->pathname);
-    (void) write(1, buffer, strlen(buffer));
-
-    free(cur);
-}
-
-struct file_node * Find_File_node(FILE * file){
-    struct file_node * ptr = head;
-    while(1){
-        if(ptr == NULL){  
-            return NULL;
-            break;
-        }
-        if (ptr->file_ptr == file){
-            return ptr;
-        }
-        if(ptr->next == NULL){
-            return NULL;  
-            break;
-        }
-        ptr = ptr->next;
-    }
-}
-
-
