@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/syscall.h>
-
+#include <execinfo.h>
 
 #define gettid() syscall(__NR_gettid)
 
@@ -60,6 +60,34 @@ static void calledFirst()
     real_fclose = dlsym(RTLD_NEXT, "fclose");
 }
 
+int flag = 0;
+
+
+void
+print_trace (void)
+{
+  void *array[10];
+  char **strings;
+  int size, i;
+  flag = 1;
+  size = backtrace (array, 10);
+  strings = backtrace_symbols (array, size);
+  flag = 0;
+  if (strings != NULL)
+  {
+    char buffer[100];
+    (void) sprintf(buffer, "Obtained %d stack frames.\n", size);
+    (void) write(1, buffer, strlen(buffer));
+    for (i = 0; i < size; i++){
+        char buffer2[100];
+        (void) sprintf(buffer2, "%s\n", strings[i]);
+        (void) write(1, buffer2, strlen(buffer2));
+    }
+  }
+
+}
+
+
 
 void * malloc(size_t size) {
     if (real_malloc == NULL) {  
@@ -67,6 +95,8 @@ void * malloc(size_t size) {
     }
 
     void * p = real_malloc(size);
+    if(flag != 1)
+        print_trace();
     // char buffer[100];
     // (void) sprintf(buffer, "%lu malloc (%u) == %p\n", gettid(), (unsigned int)size, p);
     // (void) write(1, buffer, strlen(buffer));
@@ -111,7 +141,7 @@ int fclose(FILE *file) {
 
     int MAXSIZE = 0xFFF;
     char proclnk[0xFFF];
-    char filename[0xFFF];
+    char filename[100];
     int fno;
     ssize_t r;
     int res;
@@ -124,7 +154,6 @@ int fclose(FILE *file) {
         if (r < 0)
         {
             printf("failed to readlink\n");
-            exit(1);
         }
         filename[r] = '\0';
         
@@ -137,3 +166,4 @@ int fclose(FILE *file) {
     
     return res;
 }
+
