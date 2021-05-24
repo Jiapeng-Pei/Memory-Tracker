@@ -62,12 +62,19 @@ static void calledFirst()
 
 int flag = 0;
 
+int has_dy = 0;
+int has_static = 0;
+int all_libcall = 0;
+
 
 void
 print_trace (void)
 {
   void *array[10];
   char **strings;
+  char res_string[200] = "";
+  char dy_func[100];
+
   int size, i;
   flag = 1;
   size = backtrace (array, 10);
@@ -75,15 +82,41 @@ print_trace (void)
   flag = 0;
   if (strings != NULL)
   {
-    char buffer[100];
-    (void) sprintf(buffer, "Obtained %d stack frames.\n", size);
-    (void) write(1, buffer, strlen(buffer));
+    
     for (i = 0; i < size; i++){
-        char buffer2[100];
-        (void) sprintf(buffer2, "%s\n", strings[i]);
-        (void) write(1, buffer2, strlen(buffer2));
+        if(strstr(strings[i], ".so")){
+            continue;
+        }
+        if(strstr(strings[i], "/lib")){
+            continue;
+        }
+        char * left_p = strstr(strings[i], "(");
+        if(*(left_p+1) != '+'){
+            all_libcall = 0;
+            has_dy = 1;
+
+            strcpy(dy_func,strings[i]);
+            strcat(dy_func,"\n");
+
+            break;
+        }else{
+            has_static = 1;
+            all_libcall = 0;
+        }
+
     }
+    if(all_libcall){
+        strcat(res_string,"Library function leakage!\n");
+    }
+    if(has_static){
+        strcat(res_string,"Static function leakage!\n");
+    }
+    if(has_dy){
+        strcat(res_string,dy_func);
+    }
+    (void) write(1, res_string, strlen(res_string));
   }
+
 
 }
 
