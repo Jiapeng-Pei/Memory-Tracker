@@ -267,9 +267,6 @@ void free(void *usr_ptr) {
     struct malloc_list_node* ptr = (struct malloc_list_node*)((char*)usr_ptr - HEAD_SIZE);
     total_used_size -= ptr->size;
 
-    if (INS_TRACE) {
-    	Check_Malloc_Time();
-    }
 
     char buffer[100];
     (void) sprintf(buffer, "free (%p)\n", usr_ptr);
@@ -278,6 +275,11 @@ void free(void *usr_ptr) {
     Remove_Node(ptr);
     real_free(ptr->info_str);
     real_free(ptr);
+
+    
+    if (INS_TRACE) {
+        Check_Malloc_Time();
+    }
 }
 
 /*
