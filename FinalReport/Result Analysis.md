@@ -1,32 +1,30 @@
+## Final report for process-memory-tracker
 
+### Result Analysis
 
-## Result Analysis
-
-- **Task1**
+- ##### **Task1**
 
   In Part 1, we have complete all functions mentioned in design document. 
 
   goals implemented: 
 
-  - we can show the memory usage statistic in real time and sort them by memory size, 
-  - for multiple threads we can find there tid. 
+  - we can show the memory usage statistic in real time and sort them by memory size and their name
+  - for multiple threads we can find their tgid
   - also, we use gui table to show the result.   
 
-  ​	here is a screenshot of UI:
+  ​	here is a screenshot of UI:![微信图片_20210527141827](sample.png)
 
-  ![微信图片_20210527141827](微信图片_20210527141827.png)
-
-  in this graph, each thread's information(id, memory, tid) are shown in this table, and table is updated every second. 
+  in this graph, each thread's information(id, memory, tgid, name) are shown in this table, and table is updated every second. 
 
   In this part, we still use c++ to implement gui instead of using python or other language which is easier to draw a graph, because our whole project is written by c/c++, in this way, it is more compatible to the whole project.
 
-- **Task2**
+- ##### **Task2**
 
   For this part, we choose to use DLL hook instead of modifying or adding header files to the user's source code, so that the tool does not need the user's code, only needs executable files. When their code is very complex, it may be time-consuming to modify it properly, or even users do not want to modify their code. Therefore, our solution is easier for users to use.
 
   
 
-  how to use:
+  **how to run the tool**:
 
   1. First you need to compile your program e.g `gcc -o malloc ./malloc.c -g -rdynamic` 
 
@@ -38,10 +36,14 @@
 
   
 
-  Goals implemented:
+  **Goals implemented:**
 
   - Monitoring memory allocation
   - File handle info
+
+  
+
+  **Demo**
 
   Monitoring memory will be showed in Task 3 result, since this part is similar and related to Task3.
 
@@ -60,7 +62,7 @@
   }
   ```
 
-  <img src="微信图片_20210527151240.png" alt="微信图片_20210527151240" style="zoom:50%;" />
+  <img src="微信图片_20210527151240.png" alt="微信图片_20210527151240" style="zoom: 43%;" />
 
   
 
@@ -70,23 +72,23 @@
 
   Our tool is able to record complicated system program ssh's file handle.
 
-  ![微信图片_20210527150913](微信图片_20210527150913.png)
+  <img src="微信图片_20210527150913.png" alt="微信图片_20210527150913" style="zoom:35%;" />
 
-  <img src="微信图片_20210527151002.png" alt="微信图片_20210527151002" style="zoom:50%;" />
+  <img src="微信图片_20210527151002.png" alt="微信图片_20210527151002" style="zoom: 35%;" />
 
   ssh only open 1 file, as we can see.
 
   
 
-  Goals changed:
+  **Goals changed:**
 
   - We discarded pin.
 
     We try to use pin at first, because we think we only need to insert some codes after trace, we can record the message of `malloc` and `free`, but after trying for several days, we find trace instrumental is not appropriate for this problem and instruction instrumental will largely decrease the performance, so we decided to use DLL hook at last.
 
-- **Task3**
+- ##### **Task3**
 
-  - Expected goals that we have achieved:
+  - **Expected goals that we have achieved:**
 
     1. Record the process memory allocation and release
 
@@ -94,11 +96,11 @@
 
     3. Point out probable leakage part
 
-  - Effects:
+  - **Effects:**
 
     A sample code called *test* to demonstrate the effects:
 
-    ![image-20210526122403693](test1.png)
+    <img src="test1.png" alt="image-20210526122403693" style="zoom:50%;" />
 
     Some Observations: Firstly, there are two memory leakage: ptr1 in dummy function and ptr3 in main. Secondly, we see that ptr1 is declared in a function, and this code includes *new* & *malloc*. Thirdly, this sample code sleeps for 2 seconds. 
 
@@ -106,7 +108,7 @@
 
     Our tool is written in a file called *Final_1_1.c*, and the sample test code is *test.cpp*. The usage is shown in the picture below.
 
-    ![image-20210526112712649](image-20210526112712649.png)
+    <img src="image-20210526112712649.png" alt="image-20210526112712649" style="zoom:50%;" />
 
     The user needs to build our cpp into a *.so* file and compile their program. Then they uses the third command in the image above to run our tool and their program. The meanings of *LEAK_EXPIRE*, *DEBUG*, *INS_TRACE* are discussed later.
 
@@ -114,19 +116,19 @@
 
     The memory log is shown below:
 
-    ![image-20210526163215326](image-20210526163215326.png)
+    <img src="image-20210526163215326.png" alt="image-20210526163215326" style="zoom:50%;" />
 
     1. First line is the thread id of the *test* program.
 
-    2. **malloc** indicates the tested program invokes a **malloc** or a **new**( **new** invokes **malloc** implicitly). Number in the parenthesis is the **malloc** size. Return is the address of the pointer. Used size is the total used size in the heap. 
+    2. `malloc` indicates the tested program invokes a `malloc` or a `new`( `new` invokes  `malloc` implicitly). Number in the parenthesis is the `malloc` size. Return is the address of the pointer. Used size is the total used size in the heap. 
 
-    3. As for **free**, the line illustrates that a **free** or a **delete** (**delete** implicitly invokes **free**) is invoked. Number in the parenthesis is the freed pointer.
+    3. As for `free`, the line illustrates that a `free` or a `delete` (`delete` implicitly invokes `free`) is invoked. Number in the parenthesis is the freed pointer.
 
-    4. Our memory management uses **list** data structure to store information. *DEBUG* variable mentioned above gives user the right to print **list** information. Therefore, in the picture, a node is inserted when **malloc** is invoked, and the node is removed when **free** is invoked. Unfreed pointer indicates the number of nodes in the **list**.
+    4. Our memory management uses `list` data structure to store information. *DEBUG* variable mentioned above gives user the right to print `list` information. Therefore, in the picture, a node is inserted when `malloc` is invoked, and the node is removed when `free` is invoked. Unfreed pointer indicates the number of nodes in the `list`.
 
     5. Our tool lets user to choose a memory expire time span, which means our tool prints leakage info after the set time.
 
-       In this example, the test program runs for more than two seconds. *LEAK_EXPIRE* sets the time to be 1 millisecond. So the leakage info are printed after 1 millisecond triggered by every **free**, in **Detect Expire**.  This mechanism is significant. For instance, if a user runs a server, and the connections are closed after 300 seconds. The user sets *LEAK_EXPIRE* to be 300000 milliseconds, and then he can detects whether the connection is successfully closed. 
+       In this example, the test program runs for more than two seconds. *LEAK_EXPIRE* sets the time to be 1 millisecond. So the leakage info are printed after 1 millisecond triggered by every `free`, in **Detect Expire**.  This mechanism is significant. For instance, if a user runs a server, and the connections are closed after 300 seconds. The user sets *LEAK_EXPIRE* to be 300000 milliseconds, and then he can detects whether the connection is successfully closed. 
 
     6. There are 2 possible leakage in *Detect Expire*. They are at *test* and the functions, addresses are shown in the parenthesis. This result **matches** the *test* scenario.
 
@@ -134,15 +136,15 @@
 
   ​		Another test case:
 
-  ​		![image-20210526172059463](image-20210526172059463.png)
+  ​		<img src="image-20210526172059463.png" alt="image-20210526172059463" style="zoom:50%;" />
 
   ​		This example is different from the last one. First, the dummy function is static function. Second, the example            			 		demonstrates usage of **calloc** and **realloc**.
 
   ​		The result memory log is shown below:
 
-  ​        ![image-20210526170711866](image-20210526170711866.png)
+  ​        <img src="image-20210526170711866.png" alt="image-20210526170711866" style="zoom:50%;" />
 
-  1. The user is able to see the **calloc** and **realloc** information. **calloc** records the *nitems* (in this example is 5), *size*(in this example is 4). **realloc** records the old address, and new pointer address, new allocated size.
+  1. The user is able to see the `calloc` and `realloc` information. `calloc` records the *nitems* (in this example is 5), *size*(in this example is 4). `realloc` records the old address, and new pointer address, new allocated size.
   2. Our tool cannot identify static function name. Details will be explained in *Implementation* sector.  In this example, *ptr2* causes a memory leak. In picture's **Detect Expire**, it shows the major call-stack, which indicates that the main function invokes a static function, and that static function has a memory leak.
 
   
@@ -151,53 +153,49 @@
 
   Here's ssh: .
 
-  ![image-20210526173032194](image-20210526173032194.png)
+  <img src="image-20210526173032194.png" alt="image-20210526173032194" style="zoom:50%;" />
 
   Here are some glimpse of the output message: We successfully record all the memory allocation and leakage information!
 
-  ![image-20210526173145782](image-20210526173145782.png)
+  <img src="image-20210526173145782.png" alt="image-20210526173145782" style="zoom:50%;" />
 
   ssh is complicated, and our tool outputs a  total 1995313 lines:
 
-  ![image-20210526173239497](image-20210526173239497.png)
+  <img src="image-20210526173239497.png" alt="image-20210526173239497" style="zoom:50%;" />
 
   1.  Our tool is able to manage a surprisingly sophisticated program.
   2.  ssh has some function leakage, and we find this is true by searching on Google.
-  3.  ssh invokes huge amount of realloc, calloc, which testifies our tool works smoothly under all kinds of circumstances.
+  3.  ssh invokes huge amount of `realloc`, `calloc`, which testifies our tool works smoothly under all kinds of circumstances.
 
   
 
   Here is /bin/ls:
 
-  ![image-20210526175419289](image-20210526175419289.png)
+  <img src="image-20210526175419289.png" alt="image-20210526175419289" style="zoom:50%;" />
 
   We successfully record the memory information of /bin/ls, which includes calloc, realloc, e.t.c.
 
-  ![image-20210526175458237](image-20210526175458237.png)
+  <img src="image-20210526175458237.png" alt="image-20210526175458237" style="zoom:50%;" />
 
   
 
-  - Goals haven't been achieved:
+  - **Goals haven't been achieved:**
     
     1. In Real time
     
-       It is not practical to monitor memory in real time. First, programs like ssh is too complicated to output memory information in real time. Second, real time requires too much CPU energy and too hard to code. Therefore, we instead use *LEAK_EXPIRE*. Users sets a time limit, and **malloc** which exceeds the limit will be treated as probable leakage.
+       It is not practical to monitor memory in real time. First, programs like ssh is too complicated to output memory information in real time. Second, real time requires too much CPU energy and too hard to code. Therefore, we instead use *LEAK_EXPIRE*. Users sets a time limit, and `malloc` which exceeds the limit will be treated as probable leakage.
     
     2. Check at the end of the code
     
-       Having discussed with the teacher, we found that it is nearly impossible to let the program signal before it dies. So, instead, we let the memory detection triggered by **free**. It is reasonable to judge when **free** is invoked.
+       Having discussed with the teacher, we found that it is nearly impossible to let the program signal before it dies. So, instead, we let the memory detection triggered by `free`. It is reasonable to judge when `free` is invoked.
     
     3. Pin
     
        In design document, we also proposed this method. In practice, we used the one discussed above and discarded Pin.
 
-
-
-
-
 ## Implementation
 
-- **Task1**
+- ##### **Task1**
 
   1. first you need to download qt using command `sudo apt-get install qt5-default`
 
@@ -222,21 +220,21 @@
 
   1. read `/proc` file to get all process's id to monitor and use `filesystem::directory_iterator()` to iterate directories whose name is number, which means they are processes in this file.
 
-  ![微信图片_20210527141844](微信图片_20210527141844.png)
+  <img src="微信图片_20210527141844.png" alt="微信图片_20210527141844" style="zoom:40%;" />
 
   2. read `/proc/filename/status` we can get memory info and Tgid info, and extract number from these strings
 
-  <img src="微信图片_20210527141850.png" alt="微信图片_20210527141850" style="zoom:50%;" />
+  <img src="微信图片_20210527141850.png" alt="微信图片_20210527141850" style="zoom:40%;" />
 
-  <img src="微信图片_20210527141847.png" alt="微信图片_20210527141847" style="zoom: 50%;" />
+  <img src="微信图片_20210527141847.png" alt="微信图片_20210527141847" style="zoom: 40%;" />
 
   3. in `/proc/filename/task` we can get threads of the process and we can use the same method to get information of the thread just the same as mentioned
 
-  <img src="微信图片_20210527141852.png" alt="微信图片_20210527141852" style="zoom:50%;" />
+  <img src="微信图片_20210527141852.png" alt="微信图片_20210527141852" style="zoom:40%;" />
 
   4. notice: for some process, there is no `VmRSS` item in status file. thus we need to read `/proc/id/statm` file and use the second value to get memory information
 
-  <img src="微信图片_20210527141841.png" alt="微信图片_20210527141841" style="zoom:50%;" />
+  <img src="微信图片_20210527141841.png" alt="微信图片_20210527141841" style="zoom:40%;" />
 
   5. For UI part, we use qt to implement. we create `qTableView` and `QStandardItemModel` to show the result and use `Qtimer` to update result every 1 second to achieve real time showing.
 
@@ -248,7 +246,7 @@
 
 
 
-- **Task2**
+- ##### **Task2**
 
   This part's skeleton is generally the same as **Design Document**. Hence, the **Design Document** idea is briefly *rehashed* here:
 
@@ -260,16 +258,16 @@
   >
   >   Besides allocating some space, the overidden functions also output the memory information to a log for storage. Information like allocated size and the pointer should be stored. *new* operator also invokes *malloc*.
 
-  Furthermore, in practice, we create a **list** structure. The program creates a **malloc_list_node** when **malloc** is called. It stores *create_time* and *callstack* information for task 3 to use. 
+  Furthermore, in practice, we create a `list` structure. The program creates a `malloc_list_node` when `malloc` is called. It stores *create_time* and *callstack* information for task 3 to use. 
 
   Other basic information outputs to log immediately.
 
-  - For **malloc**, we output its *return address* and *size*. 
-  - For **free**, we output the *freed pointer*.
-  -  For **calloc**, we output *item number* and *item size*. 
-  - For **realloc**, we output *old address*, *new address*, *new size*. 
-  - For **fopen**, we output *pathname* and *mode*
-  - For **fclose**, we output the *closed pathname*. In addition, the implementation of **fclose** is tricky( because the pathname info is covert ) and is discussed in later part.
+  - For `malloc`, we output its *return address* and *size*. 
+  - For `free`, we output the *freed pointer*.
+  -  For `calloc`, we output *item number* and *item size*. 
+  - For `realloc`, we output *old address*, *new address*, *new size*. 
+  - For `fopen`, we output *pathname* and *mode*
+  - For `fclose`, we output the *closed pathname*. In addition, the implementation of `fclose` is tricky( because the pathname info is covert ) and is discussed in later part.
 
   ```C
   struct malloc_list_node {
@@ -302,9 +300,9 @@
   >
   > 
 
-  In  practice, we indeed have been faced with some *segmentation fault* without *temporary memory*. This is owing to the fact that **malloc** is called before the **malloc** is hooked or **dlsym** invokes allocation functions. Thus, this problem is solved neatly by some temporary allocators. Mechanism is as follows:
+  In  practice, we indeed have been faced with some *segmentation fault* without *temporary memory*. This is owing to the fact that `malloc` is called before the `malloc` is hooked or `dlsym` invokes allocation functions. Thus, this problem is solved neatly by some temporary allocators. Mechanism is as follows:
 
-  Firstly, if real allocation functions is not hooked, then static allocator if called first. Take **malloc** as example:
+  Firstly, if real allocation functions is not hooked, then static allocator if called first. Take `malloc` as example:
 
   ```c
   void * malloc(size_t size) {
@@ -336,9 +334,9 @@
 
   Import the real function call
 
-  For instance, if we want to get the original malloc function implemented by system, we can use dlsym function.
+  For instance, if we want to get the original `malloc` function implemented by system, we can use `dlsym` function.
 
-  > The function dlsym takes a "handle" of a dynamic library and the null-terminated symbol name, returning the address where that symbol is loaded into memory.
+  > The function `dlsym` takes a "handle" of a dynamic library and the null-terminated symbol name, returning the address where that symbol is loaded into memory.
   >
   > ```c
   > real_malloc = dlsym(RTLD_NEXT, "malloc");
@@ -383,11 +381,7 @@
 
   
 
-  
-
-  
-
-- **Task3**
+- ##### **Task3**
 
 1. **Allocate extra memory to store information**
 
@@ -478,13 +472,13 @@
 
    Line (1) finds how many frames in a callstack.
 
-   Line (2) returns a string array containing the information of each frame. Furthermore, **backtrace** also calls **malloc**. Thus, we add some conditions to avoid recursion.
+   Line (2) returns a string array containing the information of each frame. Furthermore, `backtrace` also calls `malloc`. Thus, we add some conditions to avoid recursion.
 
    After re-organizing and storing, we print the call-stack information as last sector shows.
 
 3. **Trigger by free**
 
-   As mentioned before, the messages printing is triggered by free. If the *INS_TRACE* is true, free will check whether each **malloc** in the list is time up. If it has exceeded time limit, then the program will invoke **backtrace** functions to print its callstack. 
+   As mentioned before, the messages printing is triggered by free. If the *INS_TRACE* is true, free will check whether each `malloc` in the list is time up. If it has exceeded time limit, then the program will invoke `backtrace` functions to print its callstack. 
 
    
 
