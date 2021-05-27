@@ -480,5 +480,39 @@
 
    As mentioned before, the messages printing is triggered by free. If the *INS_TRACE* is true, free will check whether each `malloc` in the list is time up. If it has exceeded time limit, then the program will invoke `backtrace` functions to print its callstack. 
 
-   
+## Labor Division
+
+Task1: 陈浩
+
+Task2&3: 裴嘉鹏 张沐阳
+
+Debug&Idea: 共同完成
+
+Also, we greatly appreciate Prof 张殷乾 for his careful guidance and enlightening ideas!
+
+## Future Direction
+
+1. Check memory leakage status periodically (every 2 minutes, for example). Our current implementation only check leakage information when free is called.
+2. Ensure multi-thread security. So that for program with multi-thread, memory trace and  leakage information will be documented correctly.
+3. Design simple UI interface for displaying memory trace and leakage information.  
+
+
+
+## Summary
+
+- Techniques Learned
+
+  1. Pin. Even though we didn't use pin in our final implementation, we have still learned this dynamic binary instrumenting tool. We learned basic definitions of pin concepts and wrote demos.
+
+  2. We learned how to use qt in c++ to implement UI and create a timer to update it in real time.
+  3. We learned how to replace the dynamic link library are replace it with our .so file. What's more, we fully understand the principle of memory allocation functions (like `malloc` `calloc ` `realloc`) and add linked list information for each of these functions. 
+  4. Learned how to get call_stack of a method using `backtrace.h`. 
+
+- Experience
+
+  1. Be patient, exchange ideas and progress regularly, solve bugs together.
+
+  2. Don't forget to celebrate after completing a great feature or solving hard bug!    (Let's go 火锅烧烤) 
+
+
 
