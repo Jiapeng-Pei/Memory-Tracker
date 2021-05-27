@@ -406,14 +406,14 @@
 
    #### malloc
 
-   ![avator](malloc.png)
+   <img src="malloc.png" alt="avator" style="zoom:25%;" />
 
    - As above graph illustrates, if program calls ` malloc(size) ` , we actually call `real_malloc(size + HEAD_SIZE)` . The additional bottom memory space is used to store `malloc_list_node` in order to trace memory leak.
    - Writes information to `mem_log.out`.
 
    #### calloc
 
-   ![avator](calloc.png)
+   <img src="calloc.png" alt="avator" style="zoom: 50%;" />
 
    - `calloc(num, size)` returns an memory space of size `num * size` which is initialized to 0. So it's very similar to malloc, the only difference is initialization. So what we do is simply use `real_malloc(num * size)` and set returned memory space to 0.
    - Writes information to `mem_log.out`.
@@ -444,7 +444,7 @@
 
      - `new_ptr != old_ptr`
 
-       ![avator](realloc.png)
+       <img src="realloc.png" alt="avator" style="zoom: 25%;" />
 
        The values in the new memory space remains the same, but the address pointer is changed. So we need to modify pointers which values are `old_ptr`, to `new_ptr`.
 
@@ -460,7 +460,7 @@
 
    - Update linked list, and check whether node's live time exceeds `EXPIRE_TIME`. If it does, writes information to `mem_log.out`.
 
-     ![avator](free.png)
+     <img src="free.png" alt="avator" style="zoom: 25%;" />
 
    - Free memory space by calling `real_free(real_ptr)`.
 
