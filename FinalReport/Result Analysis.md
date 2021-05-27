@@ -12,7 +12,7 @@
   - for multiple threads we can find their tgid
   - also, we use gui table to show the result.   
 
-  ​	here is a screenshot of UI:![微信图片_20210527141827](sample.png)
+  ​	here is a screenshot of UI:![微信图片_20210527141827](./sample.PNG)
 
   in this graph, each thread's information(id, memory, tgid, name) are shown in this table, and table is updated every second. 
 
